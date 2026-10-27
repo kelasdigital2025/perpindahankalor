@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Misi Kalor</title>
+<style>
+:root{--bg1:#1b2a6b;--bg2:#6a2c91;--card:#fff;--ink:#1d2340;--soft:#eef0ff;--ok:#16a34a;--bad:#e11d48;--accent:#ff7a1a;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg1:#0d1440;--bg2:#3a1558;--card:#1f2547;--ink:#f1f2ff;--soft:#2b3260}}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{font-family:"Trebuchet MS","Segoe UI",system-ui,sans-serif;background:linear-gradient(160deg,var(--bg1),var(--bg2)) fixed;color:var(--ink);display:flex;justify-content:center}
+#app{width:100%;max-width:560px;padding:14px}
+.hud{display:flex;justify-content:space-between;align-items:center;color:#fff;font-weight:800;gap:8px;font-size:15px}
+.pill{background:rgba(255,255,255,.18);padding:6px 12px;border-radius:99px}
+.thermo{height:14px;border-radius:99px;background:rgba(255,255,255,.2);margin:10px 0;overflow:hidden}
+.thermo i{display:block;height:100%;width:0;background:linear-gradient(90deg,#38bdf8,#facc15,#ef4444);transition:width .5s}
+.card{background:var(--card);border-radius:24px;padding:20px;box-shadow:0 10px 30px rgba(0,0,0,.3);animation:pop .35s}
+@keyframes pop{from{transform:scale(.92);opacity:0}to{transform:none;opacity:1}}
+@keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+@keyframes bounce{50%{transform:translateY(-12px)}}
+.shake{animation:shake .35s}
+h1{margin:0 0 6px;font-size:30px;line-height:1.1;text-align:center}
+.big{font-size:84px;text-align:center;margin:6px 0;animation:bounce 1.4s infinite}
+.mascot{display:flex;gap:10px;align-items:center;background:var(--soft);border-radius:18px;padding:10px 12px;margin:10px 0;font-size:15px;line-height:1.35}
+.mascot b{font-size:34px}
+.q{font-size:18px;font-weight:700;text-align:center;margin:6px 0 14px;line-height:1.35}
+.timer{height:8px;background:var(--soft);border-radius:9px;overflow:hidden;margin-bottom:10px}
+.timer i{display:block;height:100%;width:100%;background:var(--accent);transform-origin:left}
+.opts{display:grid;gap:10px}
+button{font:inherit;cursor:pointer;border:0}
+.btn{padding:14px;border-radius:16px;font-weight:800;font-size:17px;background:var(--soft);color:var(--ink);border:3px solid transparent;transition:transform .1s}
+.btn:active{transform:scale(.97)}
+.btn.ok{background:var(--ok);color:#fff}
+.btn.bad{background:var(--bad);color:#fff}
+.go{display:block;width:100%;margin-top:12px;padding:15px;border-radius:18px;background:linear-gradient(90deg,#ff7a1a,#ef4444);color:#fff;font-weight:900;font-size:19px;box-shadow:0 5px 0 #a8260f}
+.go:active{transform:translateY(3px);box-shadow:0 2px 0 #a8260f}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.item{font-size:15px;font-weight:700}
+.item span{display:block;font-size:44px}
+.zone{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.zone button{padding:14px 6px;border-radius:16px;font-weight:900;color:#fff;font-size:16px}
+.z1{background:#ea580c}.z2{background:#0284c7}
+.fb{margin-top:12px;padding:12px;border-radius:14px;font-size:15px;line-height:1.4;background:var(--soft)}
+.fb.ok{border-left:6px solid var(--ok)}.fb.bad{border-left:6px solid var(--bad)}
+.stars{font-size:40px;text-align:center}
+.tag{display:inline-block;font-size:12px;padding:3px 9px;border-radius:99px;background:var(--accent);color:#fff;font-weight:800}
+.row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0;font-size:13px;text-align:center}
+.row div{background:var(--soft);border-radius:14px;padding:10px 4px}
+.row b{display:block;font-size:26px}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="hud"><span class="pill" id="hearts">❤️❤️❤️</span><span class="pill" id="rnd">Ronde 1</span><span class="pill" id="score">⭐ 0</span></div>
+  <div class="thermo"><i id="th"></i></div>
+  <div id="stage"></div>
+</div>
+<script>
+const Q=[
+["🥄","Sendok logam di sup panas ikut terasa panas.","Konduksi","Kalor merambat lewat benda padat tanpa bendanya berpindah."],
+["☀️","Panas Matahari sampai ke Bumi lewat ruang hampa.","Radiasi","Radiasi tidak butuh zat perantara, makanya bisa lewat ruang hampa."],
+["🫕","Air mendidih di panci bergerak naik-turun.","Konveksi","Air panas naik, air dingin turun. Zatnya ikut berpindah (aliran)."],
+["🔥","Tanganmu hangat saat didekatkan ke api unggun.","Radiasi","Kalor dipancarkan sebagai gelombang, bukan lewat udara yang mengalir."],
+["🍳","Wajan panas di atas kompor memasak telur.","Konduksi","Kalor berpindah dari wajan ke telur karena bersentuhan langsung."],
+["🌬️","Siang hari angin bertiup dari laut ke darat.","Konveksi","Udara panas di darat naik, udara laut yang lebih dingin mengalir mengisi."],
+["👔","Setrika panas membuat kain jadi licin.","Konduksi","Kalor berpindah dari pelat setrika ke kain lewat sentuhan."],
+["🎈","Balon udara naik karena udara panas di dalamnya.","Konveksi","Udara panas lebih ringan sehingga naik. Itu aliran udara, yaitu konveksi."],
+["💡","Kamu merasa hangat di dekat lampu pijar tanpa menyentuhnya.","Radiasi","Lampu memancarkan kalor sebagai radiasi inframerah."],
+["🍫","Cokelat meleleh saat digenggam.","Konduksi","Kalor tubuh berpindah ke cokelat lewat sentuhan langsung."],
+["🏭","Asap panas naik melalui cerobong pabrik.","Konveksi","Udara panas naik membawa asap, zatnya ikut berpindah."],
+["🔩","Ujung besi dipanaskan, ujung lainnya ikut panas.","Konduksi","Partikel besi saling bertumbukan dan meneruskan kalor sepanjang batang."]
+];
+const M=[
+["🔩","Paku besi",1],["🍳","Panci aluminium",1],["🪵","Balok kayu",0],["🧤","Sarung tangan wol",0],
+["🥄","Sendok tembaga",1],["🧴","Botol plastik",0],["📦","Styrofoam",0],["🪙","Koin logam",1],["🧶","Benang wol",0],["🍴","Garpu stainless",1]
+];
+const $=id=>document.getElementById(id);
+let S,timerId,AC;
+function beep(f,d=.12){try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();const o=AC.createOscillator(),g=AC.createGain();o.frequency.value=f;g.gain.value=.08;o.connect(g);g.connect(AC.destination);o.start();o.stop(AC.currentTime+d)}catch(e){}}
+const sh=a=>a.map(x=>[Math.random(),x]).sort((a,b)=>a[0]-b[0]).map(x=>x[1]);
+function hud(){$("hearts").textContent="❤️".repeat(S.hp)+"🖤".repeat(3-S.hp);$("score").textContent="⭐ "+S.pts;$("rnd").textContent="Ronde "+S.r;$("th").style.width=Math.min(100,S.pts/2.6)+"%"}
+function mas(t,e="🔥"){return `<div class="mascot"><b>${e}</b><div>${t}</div></div>`}
+function home(){
+ S={hp:3,pts:0,combo:0,best:0,r:1,i:0,ok:0};hud();
+ let hs=0;try{hs=+localStorage.getItem("kalor_hs")||0}catch(e){}
+ $("stage").innerHTML=`<div class="card"><div class="big">🔥</div><h1>Misi Kalor</h1>
+ <p style="text-align:center;margin:0 0 6px">Bantu <b>Kalo si Api</b> menghangatkan Planet Dingin! Jawab dengan benar supaya suhu semangat naik. 🌡️</p>
+ <div class="row"><div><b>🧱</b>Konduksi<br>lewat sentuhan</div><div><b>🌀</b>Konveksi<br>lewat aliran</div><div><b>☀️</b>Radiasi<br>lewat pancaran</div></div>
+ ${mas("Ada 2 ronde. Kamu punya 3 nyawa. Jawab beruntun untuk bonus combo!")}
+ <button class="go" onclick="startR1()">🚀 Mulai Misi</button>
+ <p style="text-align:center;font-size:13px;margin:10px 0 0">🏆 Skor tertinggi: ${hs}</p></div>`;
+}
+function startR1(){S.r=1;S.i=0;S.q=sh(Q).slice(0,8);next1()}
+function next1(){
+ if(S.i>=S.q.length)return intro2();
+ const q=S.q[S.i];hud();
+ $("stage").innerHTML=`<div class="card"><span class="tag">Soal ${S.i+1}/${S.q.length}</span>${S.combo>1?` <span class="tag" style="background:#7c3aed">🔥 Combo x${S.combo}</span>`:""}
+ <div class="big" style="font-size:72px">${q[0]}</div><div class="q">${q[1]}</div>
+ <div class="timer"><i id="tm"></i></div>
+ <div class="opts"><button class="btn" data-a="Konduksi">🧱 Konduksi</button><button class="btn" data-a="Konveksi">🌀 Konveksi</button><button class="btn" data-a="Radiasi">☀️ Radiasi</button></div><div id="fb"></div></div>`;
+ document.querySelectorAll(".opts .btn").forEach(b=>b.onclick=()=>ans1(b.dataset.a,b));
+ const tm=$("tm");tm.style.transition="transform 12s linear";requestAnimationFrame(()=>requestAnimationFrame(()=>tm.style.transform="scaleX(0)"));
+ S.t0=Date.now();clearTimeout(timerId);timerId=setTimeout(()=>ans1(null),12000);
+}
+function ans1(a,btn){
+ clearTimeout(timerId);const q=S.q[S.i];const ok=a===q[2];
+ document.querySelectorAll(".opts .btn").forEach(b=>{b.disabled=true;if(b.dataset.a===q[2])b.classList.add("ok")});
+ let msg;
+ if(ok){S.combo++;S.ok++;const bonus=Math.max(0,Math.round((12000-(Date.now()-S.t0))/1000));const g=10+bonus+(S.combo>1?S.combo*2:0);S.pts+=g;beep(660);beep(880,.15);msg=`✅ <b>Tepat! +${g}</b> poin. `}
+ else{S.combo=0;S.hp--;beep(200,.3);if(btn){btn.classList.add("bad");$("stage").firstChild.classList.add("shake")}msg=`${a?"❌ <b>Belum tepat.</b>":"⏰ <b>Waktu habis!</b>"} Jawabannya <b>${q[2]}</b>. `}
+ hud();
+ $("fb").innerHTML=`<div class="fb ${ok?"ok":"bad"}">${msg}${q[3]}</div><button class="go" onclick="${S.hp<=0?"over()":"S.i++;next1()"}">${S.hp<=0?"Lanjut":"Berikutnya ➜"}</button>`;
+}
+function intro2(){
+ S.r=2;hud();
+ $("stage").innerHTML=`<div class="card"><div class="big">🧊</div><h1>Ronde 2</h1>
+ <p style="text-align:center;margin:0">Konduktor atau Isolator?</p>
+ ${mas("<b>Konduktor</b> = penghantar kalor yang baik (biasanya logam). <b>Isolator</b> = penghambat kalor (kayu, plastik, wol).")}
+ <button class="go" onclick="startR2()">Lanjut ➜</button></div>`;
+}
+function startR2(){S.i=0;S.q=sh(M).slice(0,8);next2()}
+function next2(){
+ if(S.i>=S.q.length)return over();
+ const m=S.q[S.i];hud();
+ $("stage").innerHTML=`<div class="card"><span class="tag">Benda ${S.i+1}/${S.q.length}</span>${S.combo>1?` <span class="tag" style="background:#7c3aed">🔥 Combo x${S.combo}</span>`:""}
+ <div class="big">${m[0]}</div><div class="q">${m[1]}: konduktor atau isolator?</div>
+ <div class="zone"><button class="z1" data-a="1">🔥 Konduktor</button><button class="z2" data-a="0">🧤 Isolator</button></div><div id="fb"></div></div>`;
+ document.querySelectorAll(".zone button").forEach(b=>b.onclick=()=>ans2(+b.dataset.a));
+}
+function ans2(a){
+ const m=S.q[S.i];const ok=a===m[2];
+ document.querySelectorAll(".zone button").forEach(b=>b.disabled=true);
+ let msg;
+ if(ok){S.combo++;S.ok++;const g=12+(S.combo>1?S.combo*2:0);S.pts+=g;beep(660);beep(880,.15);msg=`✅ <b>Benar! +${g}</b> poin. `}
+ else{S.combo=0;S.hp--;beep(200,.3);$("stage").firstChild.classList.add("shake");msg="❌ <b>Kurang tepat.</b> "}
+ msg+=`${m[1]} adalah <b>${m[2]?"konduktor":"isolator"}</b>${m[2]?" karena menghantarkan kalor dengan baik.":" karena menghambat perpindahan kalor."}`;
+ S.best=Math.max(S.best,S.combo);hud();
+ $("fb").innerHTML=`<div class="fb ${ok?"ok":"bad"}">${msg}</div><button class="go" onclick="${S.hp<=0?"over()":"S.i++;next2()"}">${S.hp<=0?"Lanjut":"Berikutnya ➜"}</button>`;
+}
+function over(){
+ clearTimeout(timerId);hud();
+ const win=S.hp>0,total=16,pct=S.ok/total;
+ const st=!win?1:pct>.85?3:pct>.6?2:1;
+ const rank=!win?"Pemanasan Dulu Yuk":pct>.85?"Profesor Kalor":pct>.6?"Ahli Termal":"Penjelajah Api";
+ let hs=0;try{hs=+localStorage.getItem("kalor_hs")||0;if(S.pts>hs){hs=S.pts;localStorage.setItem("kalor_hs",hs)}}catch(e){}
+ beep(523);setTimeout(()=>beep(659),130);setTimeout(()=>beep(784),260);
+ $("stage").innerHTML=`<div class="card"><div class="big">${win?"🏆":"🥶"}</div><h1>${win?"Misi Berhasil!":"Planet Masih Dingin..."}</h1>
+ <div class="stars">${"⭐".repeat(st)}${"☆".repeat(3-st)}</div>
+ <p style="text-align:center;font-weight:800;margin:4px 0">Peringkat: ${rank}</p>
+ <div class="row"><div><b>${S.pts}</b>Skor</div><div><b>${S.ok}/${total}</b>Benar</div><div><b>${hs}</b>Rekor</div></div>
+ ${mas(win?"Hebat! Planet Dingin kini hangat berkat kamu. Coba lagi untuk bintang 3!":"Tenang, semua ilmuwan pernah salah. Baca penjelasannya dan coba lagi!")}
+ <button class="go" onclick="home();startR1()">🔁 Main Lagi</button></div>`;
+}
+home();
+</script>
+</body>
+</html>
